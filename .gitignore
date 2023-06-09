@@ -1,0 +1,9 @@
+data/*
+scripts/*
+pickAGame/*
+__pycache__/*
+*.swp
+*.swo
+*.vim
+*.png
+*.txt

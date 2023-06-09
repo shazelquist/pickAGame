@@ -1,0 +1,14 @@
+[Template.Tables.Session]
+    SessionID = 'int' # SessionID is autoset and passed, additional parameters must be entered by the user
+    Info = 'str'
+    PartySize = 'int'
+    Fun = 'float'
+    Date = 'date'
+    IsFun = 'bool'
+# !UserCustomization!
+#   Add your custom game tables here
+#   [{game_name}.Tables.{Tablename}]
+#       {Column_name} = '{type}'
+#   Handle custom table linking in '/scripts/{game_name}.py'
+#   Handle custom types in db.py and db.toml
+

@@ -1,0 +1,41 @@
+db_path = 'data/'
+script_path= 'scripts/'
+game_schemas = 'data/schemas.toml'
+
+databases = ['Sessions', 'Events']
+
+[Schemas.pAG.Sessions]
+    FirstTimeSetup = 'CREATE TABLE IF NOT EXISTS Sessions(SessionID INTEGER PRIMARY KEY AUTOINCREMENT, Game TEXT, Date TEXT UNIQUE);'
+[Schemas.pAG.Sessions.Tables.Sessions]
+    SessionID = 'int'
+    Game = 'str'
+    Date = 'date'
+[Schemas.pAG.Sessions.Select.Sessions]
+    GetLastPlayed = "SELECT Game, Date WHERE MAX(Date)"
+    GetLastPlayedGame = ["SELECT Game, Date Game = ? AND WHERE MAX(Date)", 'Game']
+[Schemas.pAG.Sessions.Tables.Aliases]
+    GameName = 'str'
+    Alias = 'str'
+
+[Schemas.pAG.Events]
+    FirstTimeSetup = 'CREATE TABLE IF NOT EXISTS Events(EventID INTEGER PRIMARY KEY AUTOINCREMENT, Game TEXT, StartDate TEXT, EndDate TEXT CHECK(StartDate<=EndDate), Description TEXT);'
+[Schemas.pAG.Events.Tables.Events]
+    EventID = 'int'
+    Game = 'str'
+    StartDate = 'date'
+    EndDate = 'date'
+    Description = 'str'
+[Schemas.pAG.Events.Select.Events]
+    GetActive = ["SELECT Game, EndDate, Description FROM Events WHERE StartDate < ? AND EndDate <= ?", 'datetime.now']
+    GetUpcoming = ["SELECT Game, EndDate, Description FROM Events WHERE StartDate > ?", 'datetime.now']
+
+[Schemas.InputRegex]
+    int     = '\d+'
+    float   = '(\d+(\.\d+)?)'
+    str     = '([\w\s]+)'
+    date    = '([\d]{4}-[\d]{2}-[\d]{2})'
+    bool    = '([Tt](RUE||rue){0,1}||[Ff](ALSE||alse){0,1})'
+
+
+[Schemas]
+    Games = []
