@@ -5,7 +5,8 @@ game_schemas = 'data/schemas.toml'
 databases = ['Sessions', 'Events']
 
 [Schemas.pAG.Sessions]
-    FirstTimeSetup = 'CREATE TABLE IF NOT EXISTS Sessions(SessionID INTEGER PRIMARY KEY AUTOINCREMENT, Game TEXT, Date TEXT UNIQUE);'
+    FirstTimeSetup = ['CREATE TABLE IF NOT EXISTS Sessions(SessionID INTEGER PRIMARY KEY AUTOINCREMENT, Game TEXT, Date TEXT UNIQUE);',
+    'CREATE TABLE IF NOT EXISTS Aliases(GameName TEXT, Alias TEXT)']
 [Schemas.pAG.Sessions.Tables.Sessions]
     SessionID = 'int'
     Game = 'str'
@@ -16,6 +17,9 @@ databases = ['Sessions', 'Events']
 [Schemas.pAG.Sessions.Tables.Aliases]
     GameName = 'str'
     Alias = 'str'
+[Schemas.pAG.Sessions.Aliases]
+    InsertBasicAlias = "INSERT INTO Aliases(GameName, Alias) VALUES(?, ?)"
+    ResolveAliases = "SELECT GameName FROM Aliases WHERE Alias LIKE ?"
 
 [Schemas.pAG.Events]
     FirstTimeSetup = 'CREATE TABLE IF NOT EXISTS Events(EventID INTEGER PRIMARY KEY AUTOINCREMENT, Game TEXT, StartDate TEXT, EndDate TEXT CHECK(StartDate<=EndDate), Description TEXT);'

@@ -18,6 +18,8 @@
  - schemas.toml/db.py: FirstTimeSetup enables you to set manually generate tables for that database instead of automatically generating it from the present tables defintion
  - !UserCustomization! is a tag that you can search for to customize and edit portions of this application
  - Move aliases to a central database instead of querying multiple
+ - Need to fully initialize pAG databases before working on Games so that aliases can be properly updated with a basic case for each game's name
+ - Make an actual init script and possibly a wizzard for generating new Games (might require toml writer)
 
 
 ### scripts/{game}.py

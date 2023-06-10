@@ -89,7 +89,11 @@ def create_db(name, config):
     if init in config:
         ins = config[init]
         print("predef", ins)
-        curs.execute(config[init])
+        if type(config[init]) == type([]):
+            for create in config[init]:
+                curs.execute(create)
+        else:
+            curs.execute(config[init])
     else:
         for table in config["Tables"]:
             explicit = [
@@ -100,14 +104,27 @@ def create_db(name, config):
             # cols = ", ".join(config["Tables"][table]) # Non Explicit types
             ins = f"CREATE TABLE IF NOT EXISTS {table}({cols});"
             curs.execute(ins)
+    newdb.commit()
     newdb.close()
 
 
-def create_missing_dbs(path, names, statuses, schemas, ext=".db"):
+def create_basic_alias(name, create_alias_stmt):
+    print(connections)
+    if "Sessions" in connections and connections["Sessions"]:
+        curs = connections["Sessions"].cursor()
+        curs.execute(create_alias_stmt, [name, name])
+        connections["Sessions"].commit()
+    else:
+        print("no connection B")
+        exit(1)
+
+
+def create_missing_dbs(path, names, statuses, schemas, alias_if_needed, ext=".db"):
     for name, exists in zip(names, statuses):
         print(name, exists)
         if not exists:
             create_db(path + name + ext, schemas[name])
+            alias_if_needed[name]()  # create_basic_alias(name, config)# PreInitialize
 
 
 def create_missing_scripts(path, names, statuses):
@@ -121,6 +138,21 @@ def create_missing_scripts(path, names, statuses):
             # target_script.write(template.replace('{game_name}', name))
 
 
+def resolve_aliases(alias, resolve_statement):
+    names = []
+    print(connections)
+    if "Sessions" in connections and connections["Sessions"]:
+        curs = connections["Sessions"].cursor()
+        names = [
+            gname[0]
+            for gname in curs.execute(resolve_statement, [f"%{alias}%"]).fetchall()
+        ]
+    else:
+        print("no connection A")
+        exit(1)
+    return names
+
+
 def initialize_db():
     # load the config file
     config = get_db_config()
@@ -128,21 +160,45 @@ def initialize_db():
     #    "Template"
     # ]  # Temporary overwrite for testing "Sessions","Events",
 
+    print(connections)
     for conf_type in ["pAG", "Games"]:
         db_status = check_files(config["db_path"], config["Schemas"][conf_type].keys())
+
+        # TODO simplfy this ugly init hack
+        if conf_type == "Games":
+            alias_if_needed = {
+                dbname: lambda nm=dbname, stmnt=config["Schemas"]["pAG"]["Sessions"][
+                    "Aliases"
+                ]["InsertBasicAlias"]: create_basic_alias(nm, stmnt)
+                for dbname in config["Schemas"][conf_type].keys()
+            }
+        else:
+            alias_if_needed = {
+                dbname: lambda nm=dbname: dbname
+                for dbname in config["Schemas"][conf_type].keys()
+            }
+
         create_missing_dbs(
             config["db_path"],
             config["Schemas"][conf_type].keys(),
             db_status,
             config["Schemas"][conf_type],
+            alias_if_needed,
         )
-
-    open_connections(config["db_path"], config["Schemas"]["Games"].keys())
+        open_connections(config["db_path"], config["Schemas"][conf_type].keys())
     return config
 
 
 def main():
-    initialize_db()
+    config = initialize_db()
+    open_connections(
+        config["db_path"], config["Schemas"]["pAG"].keys()
+    )  # PreInitialize
+    names = resolve_aliases(
+        input("Enter A game name "),
+        config["Schemas"]["pAG"]["Sessions"]["Aliases"]["ResolveAliases"],
+    )
+    print(f"\n\nResolved names:{names}")
     close_connections()
 
 

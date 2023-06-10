@@ -10,6 +10,17 @@ scripts = {}
 # make_database_types
 
 
+def query_input_more(
+    query_message="\tDo you want to add more?(Y/n) ", reg=r"^([y](es)?)||([n]o?)$"
+):
+    accepted = False
+    result = ""
+    while not accepted:
+        result = input(query_message).lower().strip()
+        accepted = re.fullmatch(reg, result)
+    return result
+
+
 def type_assertion_regex(typeconf):
     """
     Create a regular expression match function for each type given
@@ -91,4 +102,5 @@ def main():
 
 
 if __name__ == "__main__":
+    query_input_more()
     main()

@@ -3,6 +3,8 @@
 The script for {game_name}
 """
 
+from common import query_input_more
+
 db_conn = False
 native_types = {}
 database_types = {}
@@ -31,7 +33,7 @@ def session_input_loop(label, ntype):
             trans_field = native_types[ntype](field)
         except Exception as e:
             print(f'Something went wrong: "{e}"')
-    return field
+    return trans_field
 
 
 def session_input_line(scheme, split=" "):
@@ -42,7 +44,7 @@ def session_input_line(scheme, split=" "):
     Returns a list of field values as a native python type
     """
     incomplete = True
-    labels = ",".join(scheme.keys())
+    labels = split.join(scheme.keys())
     trans_field = {}
     while incomplete:
         # try:
@@ -65,7 +67,7 @@ def session_input_line(scheme, split=" "):
         #   Insert your check here and replace the value as nessasary!
         #   For repeated input attempts Please set incomplete = True
         if incomplete:
-            report = ",".join(
+            report = split.join(
                 [
                     f"{lab}:{scheme[lab]}"
                     for lab, correct in zip(scheme.keys(), regex_report)
@@ -89,9 +91,8 @@ def enter_session(session_schema, auto_prop):
     This method is intended to be updated for extended functionality.
 
     By default it requests input for each field listed in the schema
-    auto_prop contains key value pairs for
+    auto_prop contains key value pairs for auto_set or carried values.
     """
-    # TODO: test this function
     fields = session_schema.copy()
     user_required = {
         field: session_schema[field]
@@ -100,15 +101,22 @@ def enter_session(session_schema, auto_prop):
     }
     rows = []
 
-    # TODO: for multiple inputs repeat this
-    new_row = session_input_line(user_required)
-    new_row.update(auto_prop)
-    rows.append(tuple(new_row.values()))
+    more_rows = True
+    while more_rows:
+        more_rows = False
+        new_row = session_input_line(user_required)
+        new_row.update(auto_prop)
+        rows.append(tuple(new_row.values()))
+        more_rows = (
+            query_input_more(
+                "\tDo you want to add more to this {game_name} session? (y/N) "
+            )[0]
+            == "y"
+        )
 
     cols = new_row.keys()
     print(rows)
     set_session(session_schema, cols, rows)
-    print("DONE")
 
 
 def set_session(schema, cols, rows):
