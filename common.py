@@ -75,13 +75,15 @@ def import_scripts(path, names, regex_conf):
     for name in names:
         modules[name] = import_module(name)
     print(modules.keys())
-    scripts = modules
+    scripts.update(modules)
+    print(modules)
     __prepare_scripts__(regex_conf)
+    return scripts
 
 
 def main():
     config = initialize_db()
-    print(config)
+    # print(config)
     script_status = check_files(
         config["script_path"], config["Schemas"]["Games"].keys(), ext=".py"
     )
@@ -102,5 +104,4 @@ def main():
 
 
 if __name__ == "__main__":
-    query_input_more()
     main()

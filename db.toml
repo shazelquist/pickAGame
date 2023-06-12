@@ -7,6 +7,7 @@ databases = ['Sessions', 'Events']
 [Schemas.pAG.Sessions]
     FirstTimeSetup = ['CREATE TABLE IF NOT EXISTS Sessions(SessionID INTEGER PRIMARY KEY AUTOINCREMENT, Game TEXT, Date TEXT UNIQUE);',
     'CREATE TABLE IF NOT EXISTS Aliases(GameName TEXT, Alias TEXT)']
+    Create = "INSERT INTO SESSIONS(Game, Date) VALUES(?, ?)"
 [Schemas.pAG.Sessions.Tables.Sessions]
     SessionID = 'int'
     Game = 'str'

@@ -43,6 +43,8 @@ def session_input_line(scheme, split=" "):
 
     Returns a list of field values as a native python type
     """
+    if not scheme:
+        return {}
     incomplete = True
     labels = split.join(scheme.keys())
     trans_field = {}

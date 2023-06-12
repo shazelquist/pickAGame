@@ -138,6 +138,22 @@ def create_missing_scripts(path, names, statuses):
             # target_script.write(template.replace('{game_name}', name))
 
 
+def create_new_session(game_name, statement):
+    """
+    Insert new Session or grab the last session ID?
+
+    Also possible to use RETURNING clause in statement
+
+    Check the following
+    sqlite3.IntegrityError: UNIQUE constraint failed: Sessions.Date
+    """
+    if "Sessions" in connections and connections["Sessions"]:
+        curs = connections["Sessions"].cursor()
+        curs.execute(statement, [game_name, date.today().isoformat()])
+        s_id = curs.lastrowid
+    return s_id
+
+
 def resolve_aliases(alias, resolve_statement):
     names = []
     print(connections)
