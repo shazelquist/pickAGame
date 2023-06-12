@@ -10,7 +10,7 @@ from sys import argv
 from common import *
 
 
-def main():
+def session_flow(config):
     """
     Standard input session
 
@@ -18,16 +18,6 @@ def main():
         2 Create new session
         3 Input session information
     """
-    # Preinitizalization work if nessasary
-    config = initialize_db()
-    print(config)
-    script_status = check_files(
-        config["script_path"], config["Schemas"]["Games"].keys(), ext=".py"
-    )
-    create_missing_scripts(
-        config["script_path"], config["Schemas"]["Games"].keys(), script_status
-    )
-
     # Start input
     game_name = ""
     names = []
@@ -63,6 +53,31 @@ def main():
     # commit
 
     close_connections()
+
+
+def options_flow(config):
+    """
+    Show options weighted by events and last session
+    """
+
+    pass
+
+
+def main():
+    # Preinitizalization work if nessasary
+    config = initialize_db()
+    check_examples_against_regex(
+        config["Schemas"]["InputRegexExamples"],
+        type_assertion_regex(config["Schemas"]["InputRegex"]),
+    )
+    script_status = check_files(
+        config["script_path"], config["Schemas"]["Games"].keys(), ext=".py"
+    )
+    create_missing_scripts(
+        config["script_path"], config["Schemas"]["Games"].keys(), script_status
+    )
+
+    session_flow(config)
 
 
 if __name__ == "__main__":

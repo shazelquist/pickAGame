@@ -68,12 +68,31 @@ def check_files(path, items, ext=".db"):
 
 
 def open_connections(path, dbs, ext=".db"):
+    """
+    open all database connections and store a reference in the connections object
+    """
     for db in dbs:
         connections[db] = sql.connect(path + db + ext)
         print(f"\t {db}{ext} Opened")
 
 
+def commit_connections(databases=None):
+    """
+    Commit databases given or commit all of them
+    """
+    if not databases:
+        databases = connections.keys()
+    for dbname in connections:
+        if dbname in connections and connections[dbname]:
+            connections[dbname].commit()
+        else:
+            print(f"\tFailed to commit to {dbname}", file=sys.stderr)
+
+
 def close_connections():
+    """
+    close all connections
+    """
     for dbname in connections:
         connections[dbname].commit()
         connections[dbname].close()
@@ -81,10 +100,16 @@ def close_connections():
 
 
 def create_db(name, config):
+    """
+    Given the named path and configuration for this database
+    Generate the database
+
+    Config may include a "FirstTimeSetup" parameter, in which case we default to that statement.
+    Otherwise generate a lean database using our existing minimal mapping.
+    """
     newdb = sql.connect(name)
-    # do something to insert based on the config
     curs = newdb.cursor()
-    print(f"\n\nDatabase {name}\n{config}")
+    # print(f"\n\tNewDatabase {name}\n{config}")
     init = "FirstTimeSetup"
     if init in config:
         ins = config[init]
@@ -96,12 +121,13 @@ def create_db(name, config):
             curs.execute(config[init])
     else:
         for table in config["Tables"]:
+            # Use explicit typing since we already need to map types
             explicit = [
                 "{} {}".format(col, database_types[config["Tables"][table][col]])
                 for col in config["Tables"][table]
             ]
             cols = ", ".join(explicit)
-            # cols = ", ".join(config["Tables"][table]) # Non Explicit types
+            # cols = ", ".join(config["Tables"][table]) # Non Explicit types if you prefer
             ins = f"CREATE TABLE IF NOT EXISTS {table}({cols});"
             curs.execute(ins)
     newdb.commit()
@@ -109,33 +135,41 @@ def create_db(name, config):
 
 
 def create_basic_alias(name, create_alias_stmt):
-    print(connections)
+    """
+    Create the basic alias of the game's initial name
+    """
     if "Sessions" in connections and connections["Sessions"]:
         curs = connections["Sessions"].cursor()
         curs.execute(create_alias_stmt, [name, name])
         connections["Sessions"].commit()
     else:
-        print("no connection B")
+        print("no connection B", file=sys.stderr)
         exit(1)
 
 
 def create_missing_dbs(path, names, statuses, schemas, alias_if_needed, ext=".db"):
+    """
+    Create a database from schema or first time setup.
+
+    Additionally call the alias_if_needed function if that database is a game's database.
+    """
     for name, exists in zip(names, statuses):
-        print(name, exists)
         if not exists:
+            print(f"\tGenerating missing database {path}{name}{ext}")
             create_db(path + name + ext, schemas[name])
-            alias_if_needed[name]()  # create_basic_alias(name, config)# PreInitialize
+            alias_if_needed[name]()
 
 
 def create_missing_scripts(path, names, statuses):
+    """
+    Create all missing scripts at path if the status is false
+    """
+    assert len(names) == len(statuses)
     for name, exists in zip(names, statuses):
         if not exists:
-            print(name)
+            print(f"\tGenerating missing script {name}.py")
             with open("scripts/Template.py", "r") as source:
                 template = source.read()
-                # print(template.replace("{game_name}", name))
-            # with open(path+name+'.py','w') as target_script:
-            # target_script.write(template.replace('{game_name}', name))
 
 
 def create_new_session(game_name, statement):
@@ -155,8 +189,10 @@ def create_new_session(game_name, statement):
 
 
 def resolve_aliases(alias, resolve_statement):
+    """
+    Retrieve the game name from a partial alias using resolve_statement
+    """
     names = []
-    print(connections)
     if "Sessions" in connections and connections["Sessions"]:
         curs = connections["Sessions"].cursor()
         names = [
@@ -164,7 +200,7 @@ def resolve_aliases(alias, resolve_statement):
             for gname in curs.execute(resolve_statement, [f"%{alias}%"]).fetchall()
         ]
     else:
-        print("no connection A")
+        print("\tno connection to Sessions to retrieve Alias", file=sys.stderr)
         exit(1)
     return names
 
